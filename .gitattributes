@@ -1,0 +1,7 @@
+* text=auto
+*.rar binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.pdf binary
+*.jar binary
