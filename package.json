@@ -1,7 +1,7 @@
 {
   "name": "rar5-ts-reader",
   "version": "0.2.0",
-  "description": "List what's inside a RAR 5 archive (names, sizes, dates, links, owners, hashes) by reading only its headers. TypeScript, no dependencies, browsers and Node. Handles self-extracting and multi-volume archives.",
+  "description": "List what's inside a RAR 5 archive by reading only its headers, and extract stored files. TypeScript, no dependencies, browsers and Node, plus a rar5ls command. Handles self-extracting and multi-volume archives.",
   "keywords": [
     "rar",
     "rar5",
@@ -10,7 +10,9 @@
     "unrar",
     "sfx",
     "multi-volume",
-    "browser"
+    "browser",
+    "extract",
+    "cli"
   ],
   "license": "MIT",
   "repository": {
@@ -24,6 +26,10 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "rar5ls": "dist/cli.js",
+    "rar5-ts-reader": "dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -44,6 +50,7 @@
     "prepublishOnly": "npm test && npm run build"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
   }

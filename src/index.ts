@@ -1,7 +1,8 @@
 // rar5-ts-reader: lists what's inside a RAR 5 archive by reading only its headers, so even a
 // huge archive lists quickly and nothing is unpacked. Works in browsers and Node: give it the
-// bytes, or a function that reads a range of the file. It doesn't extract files yet, and
-// archives whose file list is password-protected can't be listed.
+// bytes, or a function that reads a range of the file. It extracts files saved without
+// compression ("Store"); compressed files need unrar, 7-Zip or libarchive. Archives whose file
+// list is password-protected can't be listed.
 
 export interface Rar5Link {
   /** What kind of link: a Unix symlink, a Windows symlink or junction, a hard link, or a copy of another file in the archive. */
@@ -96,7 +97,7 @@ export interface Rar5Options {
 }
 
 export class Rar5Error extends Error {
-  readonly code: 'not-rar' | 'rar4' | 'encrypted' | 'damaged';
+  readonly code: 'not-rar' | 'rar4' | 'encrypted' | 'damaged' | 'unsupported';
   constructor(code: Rar5Error['code'], message: string) {
     super(message);
     this.code = code;
@@ -394,4 +395,45 @@ export async function readRar5Volumes(volumes: Rar5Source[], options: Rar5Option
     hasRecovery: lists.some(l => l.hasRecovery),
     comment: lists.find(l => l.comment !== undefined)?.comment,
   };
+}
+
+/** Why an entry can't be extracted by extractStored, or null if it can. */
+export function cantExtract(entry: Rar5Entry): string | null {
+  if (entry.isFolder) return 'It’s a folder.';
+  if (entry.link) return 'It’s a link, not a file with data.';
+  if (entry.encrypted) return 'It’s encrypted.';
+  if (entry.method !== 0) return 'It’s compressed (only files saved with "Store" can be extracted).';
+  if (entry.splitBefore || entry.splitAfter) return 'It’s split across volumes.';
+  if (entry.packedSize !== entry.size) return 'Its stored size doesn’t match its size.';
+  return null;
+}
+
+/**
+ * Extracts a file saved without compression ("Store" in RAR), from the same source the entry
+ * was listed from, and checks it against its CRC32 when the archive has one (BLAKE2sp hashes
+ * aren't checked yet). Throws Rar5Error 'unsupported' for compressed, encrypted, split or link
+ * entries (see cantExtract), and 'damaged' if the data doesn't match its CRC32.
+ */
+export async function extractStored(source: Rar5Source, entry: Rar5Entry, options: { checkCrc?: boolean } = {}): Promise<Uint8Array> {
+  const why = cantExtract(entry);
+  if (why) throw new Rar5Error('unsupported', `${entry.name} can’t be extracted here: ${why}`);
+  const size = source instanceof Uint8Array ? source.length : source.size;
+  const end = entry.dataOffset + entry.packedSize;
+  if (end > size) throw new Rar5Error('damaged', `${entry.name}’s data runs past the end of the file.`);
+  const data = source instanceof Uint8Array ? source.slice(entry.dataOffset, end) : await source.read(entry.dataOffset, end);
+  if (data.length !== entry.packedSize) throw new Rar5Error('damaged', `${entry.name}’s data is cut short.`);
+  if (options.checkCrc !== false && entry.crc32 !== undefined && crc32(data) !== entry.crc32) {
+    throw new Rar5Error('damaged', `${entry.name} doesn’t match its checksum (the archive is damaged).`);
+  }
+  return data;
+}
+
+/**
+ * A safe place for an entry inside a folder you extract to: its path with "/" between parts, or
+ * null if the name tries to leave that folder (an absolute path, a drive letter or "..").
+ */
+export function safePath(name: string): string | null {
+  const parts = name.replace(/\\/g, '/').split('/').filter(p => p !== '' && p !== '.');
+  if (/^([a-zA-Z]:|\/)/.test(name) || parts.some(p => p === '..') || parts.length === 0) return null;
+  return parts.join('/');
 }
