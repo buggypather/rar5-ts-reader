@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { isRar5, RAR5_SIGNATURE, readRar5, Rar5Error } from '../src/index';
+import { crc32, isRar5, RAR5_SIGNATURE, readRar5, Rar5Error } from '../src/index';
 
-// Builds small RAR 5 archives by hand, following the format's headers (CRCs are left at 0;
-// the reader doesn't check them).
+// Builds small RAR 5 archives by hand, following the format's headers.
 
 function vint(n: number): number[] {
   const out: number[] = [];
@@ -21,7 +20,8 @@ function block(type: number, flags: number, fields: number[], opts: { extra?: nu
   if (opts.extra) f |= 1;
   if (opts.data) f |= 2;
   const body = [...vint(type), ...vint(f), ...(opts.extra ? vint(opts.extra.length) : []), ...(opts.data ? vint(opts.data.length) : []), ...fields, ...(opts.extra ?? [])];
-  return [...u32(0), ...vint(body.length), ...body, ...(opts.data ?? [])];
+  const sized = [...vint(body.length), ...body];
+  return [...u32(crc32(new Uint8Array(sized))), ...sized, ...(opts.data ?? [])];
 }
 
 function fileBlock(name: string, o: { folder?: boolean; size?: number; mtime?: number; crc?: number; data?: number[]; extra?: number[]; type?: number; method?: number } = {}): number[] {
@@ -79,19 +79,49 @@ describe('readRar5', () => {
     expect(r.entries.map(e => e.name)).toEqual(['a.txt']);
   });
 
-  it('only reads headers when given a range reader', async () => {
+  it('only reads headers when given a range reader, in few reads', async () => {
     const big = new Array(200_000).fill(1);
     const bytes = archive(fileBlock('big.bin', { size: big.length, data: big }), fileBlock('after.txt'));
-    let read = 0;
-    const r = await readRar5({
-      size: bytes.length,
-      read: async (s, e) => {
-        read += e - s;
-        return bytes.subarray(s, e);
-      },
-    });
-    expect(r.entries.map(e => e.name)).toEqual(['big.bin', 'after.txt']);
-    expect(read).toBeLessThan(1000);
+    const count = async (chunkSize?: number) => {
+      let bytesRead = 0;
+      let calls = 0;
+      const r = await readRar5(
+        {
+          size: bytes.length,
+          read: async (s, e) => {
+            bytesRead += e - s;
+            calls++;
+            return bytes.subarray(s, e);
+          },
+        },
+        { chunkSize },
+      );
+      expect(r.entries.map(e => e.name)).toEqual(['big.bin', 'after.txt']);
+      return { bytesRead, calls };
+    };
+    // Tiny reads: only the headers' bytes.
+    expect((await count(1)).bytesRead).toBeLessThan(1000);
+    // The default reads ahead: two reads (start, and past the big file), not one per header field.
+    const ahead = await count();
+    expect(ahead.calls).toBeLessThanOrEqual(3);
+    expect(ahead.bytesRead).toBeLessThan(bytes.length);
+  });
+
+  it('reads created and accessed times with Unix nanoseconds', async () => {
+    // Flags: 1 Unix, 2 modified, 4 created, 8 accessed, 16 nanoseconds.
+    const timeRecord = [...vint(3), ...vint(1 | 2 | 4 | 8 | 16), ...u32(1_700_000_000), ...u32(1_600_000_000), ...u32(1_650_000_000), ...u32(250_000_000), ...u32(0), ...u32(999_999_999)];
+    const extra = [...vint(timeRecord.length), ...timeRecord];
+    const [e] = (await readRar5(archive(fileBlock('t.txt', { extra })))).entries;
+    expect(e).toMatchObject({ modified: 1_700_000_000_250, created: 1_600_000_000_000, accessed: 1_650_000_000_999 });
+  });
+
+  it('notices a damaged header by its checksum', async () => {
+    const bytes = archive(fileBlock('a.txt'), fileBlock('b.txt'));
+    const at = bytes.indexOf(0x62); // the "b" of b.txt
+    const broken = bytes.slice();
+    broken[at] = 0x63;
+    await expect(readRar5(broken)).rejects.toMatchObject({ code: 'damaged' });
+    expect((await readRar5(broken, { checkCrc: false })).entries.map(e => e.name)).toEqual(['a.txt', 'c.txt']);
   });
 
   it('explains what it can’t read', async () => {
