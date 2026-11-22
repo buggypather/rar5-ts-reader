@@ -2,8 +2,8 @@ import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { cantExtract, crc32, extractStored, readRar5, Rar5Error, safePath } from '../src/index';
-import { humanSize, run } from '../src/cli';
+import { cantExtract, crc32, extractStored, readRar5, Rar5Error, safePath } from '../packages/rar5-ts-reader/src/index';
+import { humanSize, run } from '../packages/rar5ls/src/cli';
 
 const dir = join(import.meta.dirname, 'fixtures', 'libarchive');
 const path = (name: string) => join(dir, name);

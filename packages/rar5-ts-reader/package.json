@@ -1,0 +1,47 @@
+{
+  "name": "rar5-ts-reader",
+  "version": "0.3.0",
+  "description": "Read RAR 5 archives in TypeScript: list what's inside by reading only the headers, and extract stored files. No dependencies, browsers and Node. Handles self-extracting and multi-volume archives. (The command is the rar5ls package.)",
+  "keywords": [
+    "rar",
+    "rar5",
+    "archive",
+    "list",
+    "unrar",
+    "sfx",
+    "multi-volume",
+    "browser",
+    "extract"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buggypather/rar5-ts-reader.git",
+    "directory": "packages/rar5-ts-reader"
+  },
+  "homepage": "https://github.com/buggypather/rar5-ts-reader/tree/main/packages/rar5-ts-reader#readme",
+  "bugs": {
+    "url": "https://github.com/buggypather/rar5-ts-reader/issues"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  }
+}

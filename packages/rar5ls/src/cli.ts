@@ -1,10 +1,9 @@
-#!/usr/bin/env node
 // rar5ls: lists a RAR 5 archive from the command line, and extracts the files saved without
 // compression. Run `rar5ls --help`.
 
 import { mkdir, open, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { cantExtract, extractStored, readRar5, readRar5Volumes, Rar5Error, safePath, type Rar5Archive, type Rar5Source } from './index.js';
+import { cantExtract, extractStored, readRar5, readRar5Volumes, Rar5Error, safePath, type Rar5Archive, type Rar5Source } from 'rar5-ts-reader';
 
 const HELP = `rar5ls: list what's inside a RAR 5 archive (and extract stored files)
 
@@ -144,14 +143,3 @@ export async function run(args: string[]): Promise<CliResult> {
     await Promise.all(opened.map(o => o.close()));
   }
 }
-
-// Run when started as a program (not when imported by the tests).
-const started = process.argv[1] ?? '';
-if (/rar5ls|rar5-ts-reader|cli\.js$/.test(started)) {
-  run(process.argv.slice(2)).then(r => {
-    if (r.out.length) console.log(r.out.join('\n'));
-    if (r.err.length) console.error(r.err.join('\n'));
-    process.exitCode = r.code;
-  });
-}
-

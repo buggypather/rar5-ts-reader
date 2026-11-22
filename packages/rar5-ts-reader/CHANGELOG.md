@@ -1,9 +1,12 @@
 # Changelog
 
-## 0.2.1
+## 0.3.0
 
-- Stored-file extraction (`extractStored`, `cantExtract`, `safePath`) and the `rar5ls` command,
-  which missed the 0.2.0 that went to npm.
+- Extracts files saved without compression (`extractStored`, checked against their CRC32), with
+  `cantExtract` to say why another can't be and `safePath` to keep names inside a folder.
+- New error code `unsupported`, for entries `extractStored` can't extract.
+- The command is its own package now: [rar5ls](https://www.npmjs.com/package/rar5ls)
+  (`npx rar5ls archive.rar`), also as downloadable programs on the GitHub releases page.
 
 ## 0.2.0
 

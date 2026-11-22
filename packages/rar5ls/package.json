@@ -1,0 +1,44 @@
+{
+  "name": "rar5ls",
+  "version": "0.3.0",
+  "description": "List and extract RAR 5 archives from the command line: rar5ls archive.rar. Fast even for huge archives (reads only the headers); extracts stored files; self-extracting and multi-volume archives.",
+  "keywords": [
+    "rar",
+    "rar5",
+    "unrar",
+    "archive",
+    "list",
+    "extract",
+    "cli",
+    "command-line"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/buggypather/rar5-ts-reader.git",
+    "directory": "packages/rar5ls"
+  },
+  "homepage": "https://github.com/buggypather/rar5-ts-reader/tree/main/packages/rar5ls#readme",
+  "bugs": {
+    "url": "https://github.com/buggypather/rar5-ts-reader/issues"
+  },
+  "type": "module",
+  "bin": {
+    "rar5ls": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "rar5-ts-reader": "^0.3.0"
+  }
+}
