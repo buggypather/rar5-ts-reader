@@ -1,6 +1,6 @@
 {
   "name": "rar5-ts-reader",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "List what's inside a RAR 5 archive by reading only its headers, and extract stored files. TypeScript, no dependencies, browsers and Node, plus a rar5ls command. Handles self-extracting and multi-volume archives.",
   "keywords": [
     "rar",

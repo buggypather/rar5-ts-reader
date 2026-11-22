@@ -1,11 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- Stored-file extraction (`extractStored`, `cantExtract`, `safePath`) and the `rar5ls` command,
+  which missed the 0.2.0 that went to npm.
+
 ## 0.2.0
 
-- Extracts files saved without compression (`extractStored`, checked against their CRC32), with
-  `cantExtract` to say why another can't be and `safePath` to keep names inside a folder.
-- A command, `rar5ls` (or `npx rar5-ts-reader`), lists archives as a table or JSON and extracts
-  stored files, skipping unsafe names.
 - Self-extracting archives (.exe, Windows or Linux) are found and listed (`sfxOffset`).
 - `readRar5Volumes` lists a multi-volume archive as one; entries say `splitBefore` / `splitAfter`.
 - New entry fields: `created`, `accessed`, `blake2sp`, `attributes`, `link` (symlinks, junctions,
