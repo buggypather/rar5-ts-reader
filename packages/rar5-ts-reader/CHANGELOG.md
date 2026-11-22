@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Extracts files saved without compression (`extractStored`, checked against their CRC32), with
+  `cantExtract` to say why another can't be and `safePath` to keep names inside a folder.
+- New error code `unsupported`, for entries `extractStored` can't extract.
+- The command is its own package now: [rar5ls](https://www.npmjs.com/package/rar5ls)
+  (`npx rar5ls archive.rar`), also as downloadable programs on the GitHub releases page.
+
 ## 0.2.0
 
 - Self-extracting archives (.exe, Windows or Linux) are found and listed (`sfxOffset`).

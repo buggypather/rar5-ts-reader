@@ -1,49 +1,19 @@
 {
-  "name": "rar5-ts-reader",
-  "version": "0.2.0",
-  "description": "List what's inside a RAR 5 archive (names, sizes, dates, links, owners, hashes) by reading only its headers. TypeScript, no dependencies, browsers and Node. Handles self-extracting and multi-volume archives.",
-  "keywords": [
-    "rar",
-    "rar5",
-    "archive",
-    "list",
-    "unrar",
-    "sfx",
-    "multi-volume",
-    "browser"
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/buggypather/rar5-ts-reader.git"
-  },
-  "homepage": "https://github.com/buggypather/rar5-ts-reader#readme",
-  "bugs": {
-    "url": "https://github.com/buggypather/rar5-ts-reader/issues"
-  },
+  "name": "rar5-ts-reader-repo",
+  "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "CHANGELOG.md"
+  "workspaces": [
+    "packages/rar5-ts-reader",
+    "packages/rar5ls"
   ],
-  "sideEffects": false,
-  "engines": {
-    "node": ">=20"
-  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build -w rar5-ts-reader && npm run build -w rar5ls",
     "test": "vitest run",
-    "prepublishOnly": "npm test && npm run build"
+    "binaries": "node scripts/binaries.mjs",
+    "publish-new": "node scripts/publish-new.mjs"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
   }

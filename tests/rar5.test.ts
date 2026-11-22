@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { crc32, isRar5, RAR5_SIGNATURE, readRar5, Rar5Error } from '../src/index';
+import { crc32, isRar5, RAR5_SIGNATURE, readRar5, Rar5Error } from '../packages/rar5-ts-reader/src/index';
 
 // Builds small RAR 5 archives by hand, following the format's headers.
 

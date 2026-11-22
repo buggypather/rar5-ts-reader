@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { readRar5, readRar5Volumes, Rar5Error } from '../src/index';
+import { readRar5, readRar5Volumes, Rar5Error } from '../packages/rar5-ts-reader/src/index';
 
 // Real archives made by RAR and WinRAR, from libarchive's test suite (tests/fixtures/libarchive).
 const dir = join(import.meta.dirname, 'fixtures', 'libarchive');
