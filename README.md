@@ -12,8 +12,35 @@ archive lists in a moment. TypeScript, no dependencies, works in browsers and No
 - Tested against the real RAR 5 archives in libarchive's test suite, including the deliberately
   broken ones (each gives a clear error, never a crash or a hang)
 
-It does **not** extract files yet. Use it to show an archive's contents, then hand extraction to
-`unrar`, 7-Zip or libarchive.
+It extracts files saved **without compression** ("Store" in WinRAR, common for photos, videos
+and other files that don't shrink), checked against their CRC32. Compressed files can't be
+extracted yet: hand those to `unrar`, 7-Zip or libarchive.
+
+There's also a small command, `rar5ls`, to list and extract from a terminal.
+
+## From the command line
+
+```sh
+npx rar5-ts-reader archive.rar          # list it, without installing anything
+npm install -g rar5-ts-reader           # or install the rar5ls command
+rar5ls archive.rar                      # list
+rar5ls --json archive.rar               # list as JSON, for scripts
+rar5ls -x archive.rar                   # extract the stored files to archive_files/
+rar5ls -x -o out archive.rar            # ... or to out/
+rar5ls movie.part1.rar movie.part2.rar  # list a multi-volume archive as one
+```
+
+```
+Size  Modified          Kind     Name
+ 5 B  2019-04-17 20:31  stored   file.txt
+ 8 B  2019-04-17 20:32  symlink  symlink.txt -> file.txt
+ 3 B  2019-04-17 21:10  symlink  dirlink -> dir
+      2019-04-17 21:10  folder   dir
+4 entries, 16 B
+```
+
+Files whose names would land outside the folder (`../`, absolute paths) are skipped, as are
+compressed, encrypted, split and link entries, each with a message saying why.
 
 ## Install
 
@@ -58,6 +85,25 @@ await handle.close();
 
 Over HTTP, `read` can send a `Range: bytes=start-(end-1)` request. Reads are gathered into
 64 KB pieces (`chunkSize` option), so listing a remote archive takes few requests.
+
+### Extracting stored files
+
+```ts
+import { cantExtract, extractStored, readRar5, safePath } from 'rar5-ts-reader';
+
+const archive = await readRar5(source);
+for (const e of archive.entries) {
+  const why = cantExtract(e); // null, or why not: compressed, encrypted, folder, link, split
+  const path = safePath(e.name); // null if the name tries to leave the folder you extract to
+  if (why || !path) continue;
+  const data = await extractStored(source, e); // checked against its CRC32
+  // write `data` to `path` inside your folder
+}
+```
+
+`extractStored` reads just that file's bytes (with a range reader too) and throws a `Rar5Error`
+with code `unsupported` for entries it can't extract, or `damaged` if the data doesn't match its
+CRC32 (BLAKE2sp hashes aren't checked yet). It returns the whole file in memory.
 
 ### Multi-volume archives
 
@@ -113,7 +159,9 @@ readRar5(source, {
 - `not-rar`: not a RAR file
 - `rar4`: an older RAR 4 archive (use a RAR 4 library such as junrar)
 - `encrypted`: the file list itself is password-protected
-- `damaged`: the headers are cut short, broken, or fail their checksum
+- `damaged`: the headers are cut short, broken, or fail their checksum, or extracted data
+  doesn't match its CRC32
+- `unsupported`: `extractStored` was given an entry it can't extract (see `cantExtract`)
 
 ## Develop
 
